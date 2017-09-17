@@ -4,7 +4,7 @@ import numpy as np
 from collections import deque
 import pyautogui as p
 
-def GetSlopesOfLanes(OrgImage):
+def CalculateLanes(OrgImage):
     #Convert the original image to gray
     GrayImg = cv2.cvtColor(OrgImage, cv2.COLOR_BGR2GRAY)
     #Detect edges in the image
@@ -60,37 +60,52 @@ def GetSlopesOfLanes(OrgImage):
     except:
         print("Nothing detected")
         pass
-    #Now we have collected our similar lines into right and left lists
-    #Now we can convert them into lanes by dot product all the similar lines with lengths
-    #The longer lines are weighted more therefore affect the lanes more
-    #Then we normalise them by dividing by sum of the lengths(sort of like averaginng)
-    left_lane  = np.dot(length_left,  left_lines) /np.sum(length_left)  if len(length_left) >0 else None
-    right_lane = np.dot(length_right, right_lines)/np.sum(length_right) if len(length_right)>0 else None
-    return OrgImage
-
-def DrawLines(OrgImg, linesList):
-    #It is not always necessary for us to get lines back therefore
-    #we put it in a try/except statement
     try:
-        #iterate over each line in the lines array
-        for line in lines:
-            #The only list in line is filled with 4 coordinates/points
-            points = line[0]
-            #first parameter is the image
-            #Next two parameters are points of one line(coordinates, x,y)
-            #Next parameter is the color and finally, 3 is the thickness
-            cv2.line(OrgImg, (points[0], points[1]), (points[2], points[3]), [255, 255, 255], 3)
+        #Now we have collected our similar lines into right and left lists
+        #Now we can convert them into lanes by dot product all the similar lines with lengths
+        #The longer lines are weighted more therefore affect the lanes more
+        #Then we normalise them by dividing by sum of the lengths(sort of like averaginng)
+        left_lane  = np.dot(length_left,  left_lines) /np.sum(length_left)  if len(length_left) >0 else None
+        right_lane = np.dot(length_right, right_lines)/np.sum(length_right) if len(length_right)>0 else None
+        #Now we have the right LANE and the left LANE through averaging and dot product
+        #Now we need to convert them back into coordinates for pixel points
+        #Having an equation of a line (assume infinite) we can select arbitrary points and find
+        #the x or y value accordingly.
+        #So we select arbitrary points for y1 = croppedImg.shape[0]
+        #and for y2 = y1*0.5
+        #We all need them to be int so cv2.line can use them
+        LeftX1 = int((croppedImg.shape[0] - left_lane[1])/left_lane[0])
+        LeftX2 = int(((croppedImg.shape[0]*0.6) - left_lane[1])/left_lane[0])
+        RightX1 = int((croppedImg.shape[0] - right_lane[1])/right_lane[0])
+        RightX2 = int(((croppedImg.shape[0]*0.6) - right_lane[1])/right_lane[0])
+        left_lane = ((LeftX1, int(croppedImg.shape[0])), (LeftX2, int(croppedImg.shape[0]*0.6)))
+        right_lane = ((RightX1, int(croppedImg.shape[0])), (RightX2, int(croppedImg.shape[0]*0.6)))
+        #Now we can draw them on the image
+        #We first create an empty array like our original image
+        #Then we draw the lines on the empty image and finally combine with our original image
+        emptImg = np.zeros_like(OrgImage)
+        #[255, 0, 0,]is the color, 20 is the thickness
+        cv2.line(emptImg, *left_lane, [255, 0, 0], 20)
+        cv2.line(emptImg, *right_lane, [255, 0, ], 20)
+        #Finally we combine the two images
+        #It calculates the weighted sum of two arrays
+        #1.0 is the weight of our original image, we don't want to amplify it
+        #0.95 is the weight of our lines, we don't set it to 1 because we don't want it to
+        #be very significant in the image, just enough so we can see it and not obstruct anything else
+        finalImg = cv2.addWeighted(OrgImage, 1.0, emptImg, 0.95, 0.0)
     except:
-        pass
+        print("Nothing detected")
+        #If we dont detect anything, to avoid errors we simply return the original image
+        return OrgImage
+    #If all goes well, we return the image with the detected lanes
+    return finalImg
 
 sct = mss.mss()
 while True:
     game = {'top': 240, 'left': 0, 'width': 580, 'height': 340}
     gameImg = np.array(sct.grab(game))
     gameImg = cv2.resize(gameImg, (600, 400))
-    #new_img, left_slope, right_slope = process_img(img)
-    #img = GetSlopesOfLanes(gameImg)
-    print(gameImg.shape)
+    img = CalculateLanes(gameImg)
     cv2.imshow('window', img)
     if cv2.waitKey(25) & 0xFF == ord('q'):
         cv2.destroyAllWindows()
