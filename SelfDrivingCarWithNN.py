@@ -16,7 +16,7 @@ def CalculateLanes(OrgImage):
     #The 0 is the sigmaX and SigmaY standard deviation usually taken as 0
     blurredImg = cv2.GaussianBlur(imageWithEdges, (5, 5), 0)
     #These are the points of our trapezoid/hexagon that we crop out 
-    points = np.array([[0, 500],[0, 250], [280, 200], [320, 200], [800, 350], [800, 500]])
+    points = np.array([[0, 500],[0, 300], [280, 200], [320, 200], [800, 380], [800, 500]])
     #Now we calculate the region of interest
     #We first create a mask (a blank black array same size as our image)
     mask = np.zeros_like(blurredImg)
@@ -85,6 +85,7 @@ def CalculateLanes(OrgImage):
         #Then we draw the lines on the empty image and finally combine with our original image
         emptImg = np.zeros_like(OrgImage)
         #[255, 0, 0,]is the color, 20 is the thickness
+        #The star allows us to input a tuple (it processes as integer points)
         cv2.line(emptImg, *left_lane, [255, 0, 0], 20)
         cv2.line(emptImg, *right_lane, [255, 0, ], 20)
         #Finally we combine the two images
@@ -102,7 +103,7 @@ def CalculateLanes(OrgImage):
 
 sct = mss.mss()
 while True:
-    game = {'top': 240, 'left': 0, 'width': 580, 'height': 340}
+    game = {'top': 240, 'left': 0, 'width': 660, 'height': 380}
     gameImg = np.array(sct.grab(game))
     gameImg = cv2.resize(gameImg, (600, 400))
     img = CalculateLanes(gameImg)
