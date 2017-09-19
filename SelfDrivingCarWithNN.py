@@ -2,6 +2,7 @@ import cv2
 import mss
 import numpy as np
 
+#Function calculates the lanes
 def CalculateLanes(OrgImage):
     #Since our game has yellow lanes, we can detect a specific color
     #keep that color, and get rid of everything else to make it easier
