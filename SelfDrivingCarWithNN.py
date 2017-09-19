@@ -1,31 +1,46 @@
 import cv2
 import mss
 import numpy as np
-from collections import deque
-import pyautogui as p
 
 def CalculateLanes(OrgImage):
+    #Since our game has yellow lanes, we can detect a specific color
+    #keep that color, and get rid of everything else to make it easier
+    #to detect the yellow lanes
+    #So we convert our image to the HLS color scheme
+    HLSImg = cv2.cvtColor(OrgImage, cv2.COLOR_BGR2HLS)
+    #The lower and upper arrays define boundaries of the BGR color space
+    #BGR because OpenCV represents images in Numpy in reverse order
+    #So for our yellow color we say that our pixels color that are yellow will be
+    # R>= 100, B >= 0, G>=10 (lower limit), R<=255, B<=255, G<=40
+    lower = np.uint8([ 10,   0, 100])
+    upper = np.uint8([ 40, 255, 255])
+    #inRange basically finds the color we want in the HLSImg with the lower and upper
+    #boundaries(the ranges)
+    yellow_mask = cv2.inRange(HLSImg, lower, upper)
+    #We then apply this mask to our original image, and this returns an image showing
+    #only the pixels that fall in the range of that mask
+    YellowImg = cv2.bitwise_and(OrgImage, OrgImage, mask=yellow_mask)
     #Convert the original image to gray
-    GrayImg = cv2.cvtColor(OrgImage, cv2.COLOR_BGR2GRAY)
-    #Detect edges in the image
-    #150 is the max val, any edges above the intensity gradient of 150 are edges
-    #65 is the lowest intensity gradient, anything below is not an edge
-    imageWithEdges = cv2.Canny(GrayImg, threshold1=100, threshold2=200)
+    GrayImg = cv2.cvtColor(YellowImg, cv2.COLOR_BGR2GRAY)
     #Apply blurring
     #The 5x5 is the gaussianblur kernel convolved with image
     #The 0 is the sigmaX and SigmaY standard deviation usually taken as 0
-    blurredImg = cv2.GaussianBlur(imageWithEdges, (5, 5), 0)
+    blurredImg = cv2.GaussianBlur(GrayImg, (5, 5), 0)
+    #Detect edges in the image
+    #720 is the max val, any edges above the intensity gradient of 720 are edges
+    #50 is the lowest intensity gradient, anything below is not an edge
+    imageWithEdges = cv2.Canny(blurredImg, threshold1=200, threshold2=700)
     #These are the points of our trapezoid/hexagon that we crop out 
-    points = np.array([[0, 500],[0, 300], [280, 200], [320, 200], [800, 380], [800, 500]])
+    points = np.array([[0, 310],[0, 300], [220, 210], [380, 210], [600, 300], [600, 310]])
     #Now we calculate the region of interest
     #We first create a mask (a blank black array same size as our image)
-    mask = np.zeros_like(blurredImg)
+    mask = np.zeros_like(imageWithEdges)
     #Then we fill the mask underneath the points(inside the polygon) we defined
-    #with color 255(This is the part of the image we want to keep)
+    #with color white (255)(This is the part of the image we want to process)
     cv2.fillPoly(mask, [points], 255)
     #this bitwise and function basically combines the two images
-    #The coloured bit where the pixels had a value is kept while the
-    #top bit is removed
+    #The coloured bit where the pixels had a value 255 is kept while the
+    #top bit is removed (which is 0)
     croppedImg = cv2.bitwise_and(blurredImg, mask)
     #Basically the accumulation of the most imperfect edges with the minimum
     #length being defined by 180
