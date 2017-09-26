@@ -4,7 +4,7 @@
   <img align="right" width="420" height="400" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Python.svg/2000px-Python.svg.png">
 </p>
 <p>
-  <img align="center" width="600" height="10" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
+  <img align="center" width="600" height="7" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
 </p>
 
 ## Introduction
@@ -29,3 +29,15 @@ if you are unfamiliar with Keras/Tensorflow
 
 ## Implementation
 ### Imports
+```python
+1     import cv2
+2     import mss
+3     import numpy as np
+4     from keras.models import Sequential
+5     from keras.layers import Dense, Flatten
+6     from keras.optimizers import SGD
+7     from keras.layers.convolutional import Conv2D
+8     import pyautogui as p
+9     import random
+10    import time
+```
