@@ -10,6 +10,20 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## Introduction
 
 Some point in our life as programmers we all wonder how a self driving car is actually made. I went through the same phase and so here it is, a DIGITAL self driving car controlled using Python with a Reinforcement Q-learning algorithm as well as a Convolutional Neural Network.
