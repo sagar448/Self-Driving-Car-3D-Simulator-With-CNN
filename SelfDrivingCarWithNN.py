@@ -140,7 +140,7 @@ def getFrames():
     #it returns our detected lanes image as well as if any errors were produced
     img, errors = CalculateLanes(gameImg)
     #You can show the render if you want with the lanes detections
-    #cv2.imshow('window', img)
+    cv2.imshow('window', img)
     #To furhter process the image we convert it to a grayscale
     img = cv2.cvtColor(cv2.resize(img, (84, 84)), cv2.COLOR_BGR2GRAY)
     #In order for Keras to accept data we reshape it into the specific format
@@ -148,8 +148,10 @@ def getFrames():
     img = img.reshape(1, 84, 84)
     #In order to give the algorithm the feel of the "velocity" we stack the 4 images
     input_img = np.stack((img, img, img, img), axis = 3)
-#    if cv2.waitKey(25) & 0xFF == ord('q'):
-#        cv2.destroyAllWindows()
+    #This is required for openCV as a failsafe for stopping render
+    #By pressing q, you can stop render
+    if cv2.waitKey(25) & 0xFF == ord('q'):
+        cv2.destroyAllWindows()
     #If all goes well we return the input_img and the errors
     return input_img, errors
 
