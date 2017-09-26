@@ -297,12 +297,12 @@ for i in range(epochs):
         #so we make the algorithm predict from the previous frame(input_img)
         #but we alter its prediction according to the action that got the highest
         #reward and...
-        target_f = model.predict(input_img)
+        desired_target = model.predict(input_img)
         #we set that as the target_reward...
-        target_f[0][action] = target_reward
+        desired_target[0][action] = target_reward
         #So to make the algo perform the same, we associate the input_img with the
         #target we want and we fit it
-        model.fit(input_img, target_f, epochs=1, verbose=0)
+        model.fit(input_img, desired_target, epochs=1, verbose=0)
     #Finally we check if our exploration factor is bigger than our minimum exploration
     #if so we decrease it by the decay to reduce exploration, we do this every game
     if epsilon > epsilon_min:
