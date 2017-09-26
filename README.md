@@ -5,26 +5,19 @@
 </p>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Introduction
 
-Some point in our life as programmers we all wonder how a self driving car is actually made. I went through the same phase and so here it is, a DIGITAL self driving car controlled using Python with a Reinforcement Q-learning algorithm as well as a Convolutional Neural Network.
+Some point in our life as programmers we all wonder how a self driving car is actually made. I went through the same phase and so here it is, a very simple DIGITAL self driving car controlled using Python with a Reinforcement Q-learning algorithm as well as a Convolutional Neural Network.
 
+You can essentially apply this to any game, the algorithm can be adapted and the reward rules can be changed to allow for different outcomes. I will go through the code step by step explaining what each line does and once you've mastered it you can go ahead fork the code and do as you wish.
+
+```
+Note: You need to have sufficient knowledge about Reinforcment learning before progressing, this tutorial only explains
+the code it does not go into the theoretical details
+```
+
+We will be using Keras to make the magic happen with Tensorflow backend. Assuming you are familiar with Keras and Tensorflow and have them installed we can start!
+
+```
+Note: Check my other gits for brief explanation on Keras and other simple algorithms
+```
