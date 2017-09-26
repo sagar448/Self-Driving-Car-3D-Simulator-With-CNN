@@ -23,8 +23,8 @@ The links below help explain the theoretical details:
 We will be using Keras to make the magic happen with Tensorflow backend. Assuming you are familiar with Keras and Tensorflow and have them installed we can start!
 
 ```
-Note: Check my other gits for brief explanation on Keras and other simple algorithms such as the CNN and RNN
-if you are unfamiliar with Keras/Tensorflow
+Note: Check my other gits for brief explanation on Keras and other simple algorithms such as the CNN 
+and RNN if you are unfamiliar with Keras/Tensorflow!
 ```
 
 ## Implementation
