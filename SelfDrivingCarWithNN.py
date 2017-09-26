@@ -1,9 +1,20 @@
+# =============================================================================
+# Written by Sagar Jaiswal
+# =============================================================================
 import cv2
 import mss
 import numpy as np
+from keras.models import Sequential
+from keras.layers import Dense, Flatten
+from keras.optimizers import SGD
+from keras.layers.convolutional import Conv2D
+import pyautogui as p
+import random
+import time
 
 #Function calculates the lanes
 def CalculateLanes(OrgImage):
+    errors = False
     #Since our game has yellow lanes, we can detect a specific color
     #keep that color, and get rid of everything else to make it easier
     #to detect the yellow lanes
@@ -73,10 +84,6 @@ def CalculateLanes(OrgImage):
                 else:
                     right_lines.append((slope, intercept))
                     length_right.append((length))
-    except:
-        print("Nothing detected")
-        pass
-    try:
         #Now we have collected our similar lines into right and left lists
         #Now we can convert them into lanes by dot product all the similar lines with lengths
         #The longer lines are weighted more therefore affect the lanes more
@@ -111,19 +118,191 @@ def CalculateLanes(OrgImage):
         #be very significant in the image, just enough so we can see it and not obstruct anything else
         finalImg = cv2.addWeighted(OrgImage, 1.0, emptImg, 0.95, 0.0)
     except:
+        errors = True
         print("Nothing detected")
-        #If we dont detect anything, to avoid errors we simply return the original image
-        return OrgImage
+        #If we dont detect anything or to avoid errors we simply return the original image
+        return OrgImage, errors
     #If all goes well, we return the image with the detected lanes
-    return finalImg
+    return finalImg, errors
 
-sct = mss.mss()
-while True:
-    game = {'top': 240, 'left': 0, 'width': 660, 'height': 380}
+#Processes the images and returns the required data
+def getFrames():
+    #We initialise the mss screenshot library
+    sct = mss.mss()
+    #This essentially takes a screenshot of the square from the coordinates
+    #You can adjust these to your liking, 
+    game = {'top': 122, 'left': 0, 'width': 512, 'height': 286}
+    #This converts the screenshot into a numpy array
     gameImg = np.array(sct.grab(game))
+    #We want to resize the array so we can easily display it
     gameImg = cv2.resize(gameImg, (600, 400))
-    img = CalculateLanes(gameImg)
-    cv2.imshow('window', img)
-    if cv2.waitKey(25) & 0xFF == ord('q'):
-        cv2.destroyAllWindows()
-        break
+    #We pass the array into our calculateLanes function
+    #it returns our detected lanes image as well as if any errors were produced
+    img, errors = CalculateLanes(gameImg)
+    #You can show the render if you want with the lanes detections
+    #cv2.imshow('window', img)
+    #To furhter process the image we convert it to a grayscale
+    img = cv2.cvtColor(cv2.resize(img, (84, 84)), cv2.COLOR_BGR2GRAY)
+    #In order for Keras to accept data we reshape it into the specific format
+    #I want to use an image thats 84x84
+    img = img.reshape(1, 84, 84)
+    #In order to give the algorithm the feel of the "velocity" we stack the 4 images
+    input_img = np.stack((img, img, img, img), axis = 3)
+#    if cv2.waitKey(25) & 0xFF == ord('q'):
+#        cv2.destroyAllWindows()
+    #If all goes well we return the input_img and the errors
+    return input_img, errors
+
+#This function makes the car accelerate
+def straight():
+    p.keyDown("up")
+    p.keyUp("right")
+    p.keyUp("left")
+    p.keyUp("up")
+
+#We can turn right with this
+def right():
+    p.keyDown("right")
+    p.keyUp("right")
+
+#Turn left with this
+def left():
+    p.keyDown("left")
+    p.keyUp("left")
+
+
+#For now we make the car accelerate, turn right and turn left
+moves = 3
+#learning rate (discount rate)
+learningRate = 0.9
+#This is the exploration rate (epsilon)
+#Its better at first to let the model try everything
+epsilon = 1.0
+#We don't want our model to stop exploring so we set a minimum epsilon
+epsilon_min = 0.01
+#We also dont want our model to explore all the time therefore we want it
+#to decay
+epsilon_decay = 0.995
+#Number of times we want to train the algorithm
+epochs = 100
+#We want to store our data for replay/so our model can remember
+memory = []
+#The max amount of stuff we want to remember
+max_memory = 500
+
+#Lets start defining our model
+model = Sequential()
+#We will be using a CNN with 32 filters, 3x3 kernel and the input shape will be
+#84x84 with 4 grayscale images stacked on top
+#padding will be set as same and we will use the rectified activation function
+model.add(Conv2D(32, (3, 3), input_shape=(84, 84, 4), padding='same',
+                 activation='relu'))
+#This time we will use 64 filters with a 3x3 kernel, with the same act function 
+#but the padding will change
+model.add(Conv2D(64, (3, 3), activation='relu', padding='valid'))
+model.add(Conv2D(64, (3, 3), activation='relu', padding='valid'))
+#We flatten our data in order to feed it through the dense(output) layer
+model.add(Flatten())
+model.add(Dense(512, activation='relu'))
+#We have 3 outputs, forward, left, right
+model.add(Dense(3, activation='linear'))
+#We will be using the mean squared error
+model.compile(loss='mean_squared_error',
+              optimizer=SGD())
+#loop over the number of epochs (essentially the number of games)
+for i in range(epochs):
+    time.sleep(5)
+    #We set the game_over to false as the game is just starting
+    game_over = False
+    #We start of by getting initial frames and errors
+    input_img, errors = getFrames()
+    #We set the errors to false to begin with
+    errors = False
+    #We set the reward to 0
+    reward = 0
+    #While the game is not over we loop
+    while game_over==False:
+        #Np.random.rand() returns a number between 0 and 1
+        #We check if its smaller that our exploration factor
+        if np.random.rand() <= epsilon:
+            #if the random number is smaller than our exploration factor
+            #We select a random action from our 3 actions
+            action = np.random.randint(0, moves, size=1)[0]
+        else:
+            #If it's not smaller than we predict an output by inputting our
+            #4 stacked images
+            #ouput is the probability of our 3 directions
+            output = model.predict(input_img)
+            #action is the index of the highest probability and therefore
+            #indicates which turn to take
+            action = np.argmax(output[0])
+        #if our action == 0 then we go straight   
+        if int(action) == 0:
+            straight()
+        #If our action == 1 then we go right
+        elif int(action) == 1:
+            right()
+        #else we go left
+        else:
+            left()
+        #Once we've performed our action we get the next frame
+        #We also check weather to reward the algorithm or not
+        input_next_img, errors = getFrames()
+        #If we detect lanes and therefore no errors occur we reward the algorithm
+        if errors == False:
+            reward = reward + 1
+        #Else if there we detect no lanes and so there is an error we 
+        #say its game over
+        else:
+            game_over = True
+        #Game over or not we want to keep record of the steps the algo took
+        #We first check if the total memoery length is bigger than the max memory
+        if len(memory) >= max_memory:
+            #If more memory then needed we delete the first ever element we added
+            del memory[0]
+        #We append it to our memory list
+        memory.append((input_img, action, reward, input_next_img, game_over))
+        #Next we set our input_img to our latest data
+        input_img = input_next_img
+        if game_over:
+            print("Game: {}/{}, Total Reward: {}".format(i, epochs, reward))
+    #Once the game is over we want to train our algo with the data we just collected
+    #We check if our memory length is bigger than our batch size 
+    if len(memory) > 32:
+    #If so then we set the batch_size to 32
+        batch_size = 32
+    else:
+    #Else we set our batch size to whatever is in the memory
+        batch_size = len(memory)
+    #We are taking a random sample of 32 so not to overfit our algo
+    batch = random.sample(memory, batch_size)
+    #We itereate over every memory we've stored in that memory batch of 32
+    for input_img, action, reward, input_next_img, game_over in batch:
+        #if in that memory our game was over then we set the target_reward equal to reward
+        target_reward = reward
+        #If our game was not over
+        if game_over == False:
+        #This essentially is the bellman equation
+        #expected long-term reward for a given action is equal to the 
+        #immediate reward from the current action combined with the expected 
+        #reward from the best future action taken at the following state.
+            target_reward = reward + learningRate * \
+            np.amax(model.predict(input_next_img)[0])
+        #So from above we essentially know what is going to happen(input_next_img) 
+        #assuming the game wasn't over, the algorithm did well.
+        #So we want the algorithm to perform the same, essentially we
+        #persuade the algorithm to do what it did to get that reward
+        #so we make the algorithm predict from the previous frame(input_img)
+        #but we alter its prediction according to the action that got the highest
+        #reward and...
+        target_f = model.predict(input_img)
+        #we set that as the target_reward...
+        target_f[0][action] = target_reward
+        #So to make the algo perform the same, we associate the input_img with the
+        #target we want and we fit it
+        model.fit(input_img, target_f, epochs=1, verbose=0)
+    #Finally we check if our exploration factor is bigger than our minimum exploration
+    #if so we decrease it by the decay to reduce exploration, we do this every game
+    if epsilon > epsilon_min:
+        epsilon *= epsilon_decay
+        
