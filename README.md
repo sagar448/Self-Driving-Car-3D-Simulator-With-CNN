@@ -27,6 +27,19 @@ Note: Check my other gits for brief explanation on Keras and other simple algori
 and RNN if you are unfamiliar with Keras/Tensorflow!
 ```
 
+## My Setup
+
+In order to detect lanes, we need to send frames of ourr game to the algorithm for processing. I used a library called mss (MultipleScreenShot), it allows the users to take quick screenshots with almost minimal effect in FPS.
+Unfortunately, it takes the screen shot of the entire screen if coordinates aren't specified therefore in order to just get the frames of the game, the game needs to be positioned and be in focus. 
+
+The picture below depicts my environment.
+
+<p>
+  <img align="Center" width="425" height="400" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/Environment.png">
+</p>
+<p>
+  <img align="centre" width="600" height="7" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
+</p>
 ## Implementation
 ### Imports
 ```python
