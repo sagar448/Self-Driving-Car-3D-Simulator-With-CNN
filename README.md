@@ -41,6 +41,7 @@ The picture below depicts my environment.
   <img width="600" height="4" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
 </p>
 You can set it up anyway you want but make sure to change the coordinates of the ScreenShot module so it only covers the game area.
+Before we start the implementation it is a good idea to have the code open on the side as the comments have details you wouldn't want to miss.
 
 ## Implementation
 
@@ -147,62 +148,83 @@ Great now we've managed to narrow down our edges to the region that we are inter
 10        #We may not always detect a line that is why we do try/except statement
 11        try:
 12            for line in lines:
-                  #Coordinates of a single line
-                  for x1, y1, x2, y2 in line:
-                  #We dont want a vertical line or a horizontal line
-                  if x1==x2 or y1==y2:
-                      continue
-                  #Slope formula
-                  slope = (y2-y1)/(x2-x1)
-                  #Intercept
-                  intercept = y1 - slope*x1
-                  #Length
-                  length = np.sqrt((y2-y1)**2+(x2-x1)**2)
-                  #Y is reversed in images therefore a negative slope is a left line not right
-                  if slope<0:
-                      left_lines.append((slope, intercept))
-                      length_left.append((length))
-                  else:
-                      right_lines.append((slope, intercept))
-                      length_right.append((length))
-            #Now we have collected our similar lines into right and left lists
-            #Now we can convert them into lanes by dot product all the similar lines with lengths
-            #The longer lines are weighted more therefore affect the lanes more
-            #Then we normalise them by dividing by sum of the lengths(sort of like averaginng)
-            left_lane  = np.dot(length_left,  left_lines) /np.sum(length_left)  if len(length_left) >0 else None
-            right_lane = np.dot(length_right, right_lines)/np.sum(length_right) if len(length_right)>0 else None
-            #Now we have the right LANE and the left LANE through averaging and dot product
-            #Now we need to convert them back into coordinates for pixel points
-            #Having an equation of a line (assume infinite) we can select arbitrary points and find
-            #the x or y value accordingly.
-            #So we select arbitrary points for y1 = croppedImg.shape[0]
-            #and for y2 = y1*0.5
-            #We all need them to be int so cv2.line can use them
-            LeftX1 = int((croppedImg.shape[0] - left_lane[1])/left_lane[0])
-            LeftX2 = int(((croppedImg.shape[0]*0.6) - left_lane[1])/left_lane[0])
-            RightX1 = int((croppedImg.shape[0] - right_lane[1])/right_lane[0])
-            RightX2 = int(((croppedImg.shape[0]*0.6) - right_lane[1])/right_lane[0])
-            left_lane = ((LeftX1, int(croppedImg.shape[0])), (LeftX2, int(croppedImg.shape[0]*0.6)))
-            right_lane = ((RightX1, int(croppedImg.shape[0])), (RightX2, int(croppedImg.shape[0]*0.6)))
-        #Now we can draw them on the image
-        #We first create an empty array like our original image
-        #Then we draw the lines on the empty image and finally combine with our original image
-        emptImg = np.zeros_like(OrgImage)
-        #[255, 0, 0,]is the color, 20 is the thickness
-        #The star allows us to input a tuple (it processes as integer points)
-        cv2.line(emptImg, *left_lane, [255, 0, 0], 20)
-        cv2.line(emptImg, *right_lane, [255, 0, ], 20)
-        #Finally we combine the two images
-        #It calculates the weighted sum of two arrays
-        #1.0 is the weight of our original image, we don't want to amplify it
-        #0.95 is the weight of our lines, we don't set it to 1 because we don't want it to
-        #be very significant in the image, just enough so we can see it and not obstruct anything else
-        finalImg = cv2.addWeighted(OrgImage, 1.0, emptImg, 0.95, 0.0)
-    except:
-        errors = True
-        print("Nothing detected")
-        #If we dont detect anything or to avoid errors we simply return the original image
-        return OrgImage, errors
-    #If all goes well, we return the image with the detected lanes
-    return finalImg, errors
+13                #Coordinates of a single line
+14                for x1, y1, x2, y2 in line:
+15                    #We dont want a vertical line or a horizontal line
+16                    if x1==x2 or y1==y2:
+17                        continue
+18                    #Slope formula
+19                    slope = (y2-y1)/(x2-x1)
+20                    #Intercept
+21                    intercept = y1 - slope*x1
+22                    #Length
+23                    length = np.sqrt((y2-y1)**2+(x2-x1)**2)
+24                    #Y is reversed in images therefore a negative slope is a left line not right
+25                    if slope<0:
+26                        left_lines.append((slope, intercept))
+27                        length_left.append((length))
+28                    else:
+29                        right_lines.append((slope, intercept))
+30                        length_right.append((length))
+31          #Now we have collected our similar lines into right and left lists
+32          #Now we can convert them into lanes by dot product all the similar lines with lengths
+33          #The longer lines are weighted more therefore affect the lanes more
+34          #Then we normalise them by dividing by sum of the lengths(sort of like averaginng)
+35          left_lane  = np.dot(length_left,  left_lines) /np.sum(length_left)  if len(length_left) >0 else None
+36          right_lane = np.dot(length_right, right_lines)/np.sum(length_right) if len(length_right)>0 else None
+37          #Now we have the right LANE and the left LANE through averaging and dot product
+38          #Now we need to convert them back into coordinates for pixel points
+39          #Having an equation of a line (assume infinite) we can select arbitrary points and find
+40          #the x or y value accordingly.
+41          #So we select arbitrary points for y1 = croppedImg.shape[0]
+42          #and for y2 = y1*0.6, We need this in order to draw our lines (converting to pixel coordinates)
+43          #We all need them to be int so cv2.line can use them
+44          LeftX1 = int((croppedImg.shape[0] - left_lane[1])/left_lane[0])
+45          LeftX2 = int(((croppedImg.shape[0]*0.6) - left_lane[1])/left_lane[0])
+46          RightX1 = int((croppedImg.shape[0] - right_lane[1])/right_lane[0])
+47          RightX2 = int(((croppedImg.shape[0]*0.6) - right_lane[1])/right_lane[0])
+48          left_lane = ((LeftX1, int(croppedImg.shape[0])), (LeftX2, int(croppedImg.shape[0]*0.6)))
+49          right_lane = ((RightX1, int(croppedImg.shape[0])), (RightX2, int(croppedImg.shape[0]*0.6)))
+50          #Now we can draw them on the image
+51          #We first create an empty array like our original image
+52          #Then we draw the lines on the empty image and finally combine with our original image
+53          emptImg = np.zeros_like(OrgImage)
+54          #[255, 0, 0,]is the color, 20 is the thickness
+55          #The star allows us to input a tuple (it processes as integer points)
+56          cv2.line(emptImg, *left_lane, [255, 0, 0], 20)
+57          cv2.line(emptImg, *right_lane, [255, 0, 0], 20)
+58          #Finally we combine the two images
+59          #It calculates the weighted sum of two arrays
+60          #1.0 is the weight of our original image, we don't want to amplify it
+61          #0.95 is the weight of our lines, and 0.0 is the scalar added to the sum
+62          #be very significant in the image, just enough so we can see it and not obstruct anything else
+63          finalImg = cv2.addWeighted(OrgImage, 1.0, emptImg, 0.95, 0.0)
+64      except:
+65          errors = True
+66          print("Nothing detected")
+67          #If we dont detect anything or to avoid errors we simply return the original image
+68          return OrgImage, errors
+69      #If all goes well, we return the image with the detected lanes
+70      return finalImg, errors
 ```
+**Line 4** The function HoughLines is quite difficult to understand. In laymans term it is simply detecting lines in our region and returning coordinates of those lines. We set a threshold of 180 essentially being the length and the thickness being 5. To find out more about hough transformation, go to this [link](http://www.swarthmore.edu/NatSci/mzucker1/opencv-2.4.10-docs/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html)
+
+**Line 12-Line 30** Looping over all the detected lines we take one line at a time and we calculate the intercept and the slope. We omit horizontal and vertical lines as our lanes will never be straight in that perspective. Finally, depending on the slope we append our lines accordingly to the right and left lanes.
+
+**Line 35-Line 36** We want to combine all our lines into lanes. We compute the dot product of the lines and their respective lengths. Longer lines have a heavier effect and so the slopes and intercepts of those line will be more dominant. Finally divide by the lengths to essentially normalise the values(So can be mapped to the image)
+
+**Line 44-Line 47** We have the lanes, but in order to draw them we need coordinates. To draw any line (assuming infinite) you can pick arbitrary points, in this case I picked arbitrary y values. Using these I calculate the x values thus coordinates.
+
+**Line 48-Line49** Now we just group those points accordingly to the right and left lanes.
+
+**Line 53** We want to draw the line on top of our image. But in order to do that we need to have an overlay image. So here, we create an empty image with the same space dimensions as our original image. 
+
+**Line 56-Line 57** Then we draw our lines on our empty image. The color used is blue as the format is BGR and not RGB.
+
+**Line 63** Finally we combine the two images. This is done by calculating the weighted sum of the two arrays of images. In our empty image most of the pixels are set to 0 and so only the lane pixels will be effected in our original image.
+
+**Line 65-Line 68** If there are any errors or a lane wasn't detected then we simply just output our original image.
+
+**Line 70** If all goes well we output our final processed image.
+
+
