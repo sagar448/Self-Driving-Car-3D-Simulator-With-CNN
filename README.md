@@ -227,4 +227,36 @@ Great now we've managed to narrow down our edges to the region that we are inter
 
 **Line 70** If all goes well we output our final processed image.
 
+Now we can go ahead and explore the next part of the code. The next part walks you through how we take the processed frames of our game and format it so we can get it ready to input it into our CNN.
 
+```python
+1     #Processes the images and returns the required data
+2     def getFrames():
+3         #We initialise the mss screenshot library
+4         sct = mss.mss()
+5         #This essentially takes a screenshot of the square from the coordinates
+6         #You can adjust these to your liking, 
+7         game = {'top': 122, 'left': 0, 'width': 512, 'height': 286}
+8         #This converts the screenshot into a numpy array
+9         gameImg = np.array(sct.grab(game))
+10        #We want to resize the array so we can easily display it
+11        gameImg = cv2.resize(gameImg, (600, 400))
+12        #We pass the array into our calculateLanes function
+13        #it returns our detected lanes image as well as if any errors were produced
+14        img, errors = CalculateLanes(gameImg)
+15        #You can show the render if you want with the lanes detections
+16        cv2.imshow('window', img)
+17        #To furhter process the image we convert it to a grayscale
+18        img = cv2.cvtColor(cv2.resize(img, (84, 84)), cv2.COLOR_BGR2GRAY)
+19        #In order for Keras to accept data we reshape it into the specific format
+20        #I want to use an image thats 84x84
+21        img = img.reshape(1, 84, 84)
+22        #In order to give the algorithm the feel of the "velocity" we stack the 4 images
+23        input_img = np.stack((img, img, img, img), axis = 3)
+24        #This is required for openCV as a failsafe for stopping render
+25        #By pressing q, you can stop render
+26        if cv2.waitKey(25) & 0xFF == ord('q'):
+27            cv2.destroyAllWindows()
+28        #If all goes well we return the input_img and the errors
+29        return input_img, errors
+```
