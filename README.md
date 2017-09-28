@@ -246,7 +246,7 @@ Now we can go ahead and explore the next part of the code. The next part walks y
 14        img, errors = CalculateLanes(gameImg)
 15        #You can show the render if you want with the lanes detections
 16        cv2.imshow('window', img)
-17        #To furhter process the image we convert it to a grayscale
+17        #To further process the image we convert it to a grayscale
 18        img = cv2.cvtColor(cv2.resize(img, (84, 84)), cv2.COLOR_BGR2GRAY)
 19        #In order for Keras to accept data we reshape it into the specific format
 20        #I want to use an image thats 84x84
@@ -260,3 +260,277 @@ Now we can go ahead and explore the next part of the code. The next part walks y
 28        #If all goes well we return the input_img and the errors
 29        return input_img, errors
 ```
+**Line 2** This function essentially processes our screenshots using the lane detection function and then formats the image data so we can then use it with our CNN.
+
+**Line 4** We initialise our screenshot library here
+
+**Line 7** Game stores the dimensions of our screenshots. It represents the area of the screen we took the screenshot of.
+
+**Line 9** We convert it to a numpy array for further processing
+
+**Line 11** I resized the image so when it comes to displaying it, it can fit on my screen. Note, if you change the size of the screen you will need to edit the coordinates of the ROI mask in the lane detection function in order to account for the size increase or decrease.
+
+**Line 14** We now call the CalculateLane() function passing the resized game screenshot as a paramter. It returns the either the original image back to us if it detects nothing or it returns 
+
+**Line 16** You can choose to render your detection but it will slow down the process quite a bit.
+
+**Line 18** We can now start formatting our image for our CNN. Our first step is to resize it to a suitable size for the CNN to process as well as convert it to grayscale.
+
+**Line 21** Since Keras needs a specific dimension we reshape our image to 1x84x84. The 1 is essentially the batch number.
+
+**Line 23** The CNN needs to make logical decisions. Therefore, without any sense of velocity the CNN cannot perform. In order to provide the CNN with some sense of velocity we stack our images. Thus, our dimension of our input is now (1, 84, 84, 4).
+
+**Line 26-Line 27** If you've ever used OpenCV and decided to display your image/video then you know to always put this at the end or the image/video will not display.
+
+**Line 29** Finally, we return our input and errors (Errors for the CalculateLanes function)
+
+That takes care of all the image processing. We can now go ahead and start taking a look at function that controls our car in game.
+
+```python
+#This function makes the car accelerate
+def straight():
+    p.keyDown("up")
+    p.keyUp("up")
+
+#We can turn right with this
+def right():
+    p.keyDown("right")
+    p.keyUp("right")
+
+#Turn left with this
+def left():
+    p.keyDown("left")
+    p.keyUp("left")
+```
+**Function straight()** Key Down function presses the specific key on our keyboard. So we KeyDown the up key at the end. KeyUp is important as KeyDown holds the key, so we need to release it. This function is responsible for accelerating our car.
+
+**Function right()** Turns our car to the right.
+
+**Function left()** Turns our car to the left.
+
+We are now ready to start building our CNN model. Our model will be quite similar to the other CNN models in the past, we will be trying to map our image data to the actions of the car.
+```python
+1     #For now we make the car accelerate, turn right and turn left
+2     moves = 3
+3     #learning rate (discount rate)
+4     learningRate = 0.9
+5     #This is the exploration rate (epsilon)
+6     #Its better at first to let the model try everything
+7     epsilon = 1.0
+8     #We don't want our model to stop exploring so we set a minimum epsilon
+9     epsilon_min = 0.01
+10    #We also dont want our model to explore all the time therefore we want it
+11    #to decay
+12    epsilon_decay = 0.995
+13    #Number of times we want to train the algorithm (The number of games)
+14    epochs = 100
+15    #We want to store our data for our replay so our model can remember the past experiences
+16    memory = []
+17    #The max amount of stuff we want to remember
+18    max_memory = 500
+19
+20    #Lets start defining our model
+21    model = Sequential()
+22    #We will be using a CNN with 32 filters, 3x3 kernel and the input shape will be
+23    #84x84 with 4 grayscale images stacked on top
+24    #padding will be set as same(padding with 0) and we will use the rectified activation function
+25    model.add(Conv2D(32, (3, 3), input_shape=(84, 84, 4), padding='same',
+26                     activation='relu'))
+27    #This time we will use 64 filters with a 3x3 kernel, with the same act function 
+28    #but the padding will change
+29    model.add(Conv2D(64, (3, 3), activation='relu', padding='valid'))
+30    model.add(Conv2D(64, (3, 3), activation='relu', padding='valid'))
+31    #We flatten our data in order to feed it through the dense(output) layer
+32    model.add(Flatten())
+33    model.add(Dense(512, activation='relu'))
+34    #We have 3 outputs, forward, left, right
+35    model.add(Dense(3, activation='linear'))
+36    #We will be using the mean squared error
+37    model.compile(loss='mean_squared_error',
+38                  optimizer=SGD())
+```
+**Line 2** As shown in the above code, our car can do 3 things. Accelerate, turn right and turn left. Thus we set our moves variable to 3.
+
+**Line 4** This is our discount rate. We want our immediate reward to be worth more than our future reward therefore we discount the future reward in order make the current reward stand out. This is because our model is uncertain what the next step may be. (More on this later)
+
+**Line 7** This is the exploration rate. We want our algorithm to start off by trying different actions.
+
+**Line 9** We don't want our model to ever stop trying random actions so we set our minimum exploration rate
+
+**Line 12** This is the rate at which our exploration factor decays
+
+**Line 14** This is the number of games we want to play in total
+
+**Line 16** All the games ever played go in here. We want our model to learn from its mistakes.
+
+**Line 18** We don't want to store too many games as it becomes computation heavy
+
+Now we start building our CNN model.
+
+**Line 21** We initialise our machine learning algorithm.
+
+**Line 25** This is our first convolutional layer. We want to output 32 filters with a 3x3 kernel and our input shape will be 84x84x4. We set our activation function to rectified linear unit.
+
+**Line 29-Line 30** We add another two convolutional layers for better accuracy.
+
+**Line 32-Line 33** We flatten our data so we could put it through a hidden layer of a simple neural network.
+
+**Line 35** This is the final output layer with 3 nodes. It calculates the probability of our 3 actions. 
+
+**Line 37** Configuration for our loss and optimisation function. 
+
+Finally, we've reached the last step of the tutorial, our Q-Learning algorithm. The brain and heart of the algorithm. This algorithm decides the actions to take and essentially trains our car to be a better driver.
+```python
+1      #loop over the number of epochs (essentially the number of games)
+2      for i in range(epochs):
+3         #time.sleep(5)
+4         #We set the game_over to false as the game is just starting
+5         game_over = False
+6         #We start of by getting initial frames and errors
+7         input_img, errors = getFrames()
+8         #We set the errors to false to begin with
+9         errors = False
+10        #We set the reward to 0
+11        reward = 0
+12        #While the game is not over we loop
+13        while game_over==False:
+14            #Np.random.rand() returns a number between 0 and 1
+15            #We check if its smaller that our exploration factor
+16            if np.random.rand() <= epsilon:
+17                #if the random number is smaller than our exploration factor
+18                #We select a random action from our 3 actions
+19                action = np.random.randint(0, moves, size=1)[0]
+20            else:
+21                #If it's not smaller than we predict an output by inputting our
+22                #4 stacked images
+23                #ouput is the probability of our 3 directions
+24                output = model.predict(input_img)
+25                #action is the index of the highest probability and therefore
+26                #indicates which turn to take
+27                action = np.argmax(output[0])
+28            #if our action == 0 then we go straight   
+29            if int(action) == 0:
+30                straight()
+31            #If our action == 1 then we go right
+32            elif int(action) == 1:
+33                right()
+34            #else we go left
+35            else:
+36                left()
+```
+**Line 2** We loop over the amount of games we want to play. In this case I have set the epochs to 100. 
+
+**Line 3** Originally I had left the time.sleep in the program as this allowed me to prepare for the start of the algorithm but it also slows down the learning stage therefore it is commented.
+
+**Line 5** The AI is about to start playing the game so we originally set the game_over to false. We will need it later.
+
+**Line 7** We start by getting the initial "state" of the algorithm. We will need this to predict our corresponding action.
+
+**Line 9** Despite the error in **Line 7** we set our errors to false as errors at the start do not matter, the algorithm will be performing a random action to begin with. 
+
+**Line 11** Initialise our Rewards variable to 0.
+
+**Line 13** Looping for one game, while the game isn't false
+
+**Line 16-Line 19** We start off by checking if our exploration is bigger than a random number between 0 and 1. At the begining it will be and so we select a random action from our 3 actions. 
+
+**Line 20-Line 27** Once our exploration rate is low enough, we can start predicting our actions. Output stores a numpy array of size 3 produced by the prediction from our input image. Action stores the index of the maximum probability.
+
+**Line 29-Line 36** Based on our predicted or random action we select one of the functions to run that controls our car. 
+
+Halfway through! From here we can now actually start studying the bulk of the Q-learning algorithm!
+```python
+1             #Once we've performed our action we get the next frame
+2             #We also check weather to reward the algorithm or not
+3             input_next_img, errors = getFrames()
+4             #If we detect lanes and therefore no errors occur we reward the algorithm
+5             if errors == False:
+6                 reward = reward + 1
+7             #Else if there we detect no lanes and so there is an error we 
+8             #say its game over
+9             else:
+10                game_over = True
+11            #Game over or not we want to keep record of the steps the algo took
+12            #We first check if the total memoery length is bigger than the max memory
+13            if len(memory) >= max_memory:
+14                #If more memory then needed we delete the first ever element we added
+15                del memory[0]
+16            #We append it to our memory list
+17            memory.append((input_img, action, reward, input_next_img, game_over))
+18            #Next we set our input_img to our latest data
+19            input_img = input_next_img
+20            if game_over:
+21                print("Game: {}/{}, Total Reward: {}".format(i, epochs, reward))
+22        #Once the game is over we want to train our algo with the data we just collected
+23        #We check if our memory length is bigger than our batch size 
+24        if len(memory) > 32:
+25        #If so then we set the batch_size to 32
+26            batch_size = 32
+27        else:
+28        #Else we set our batch size to whatever is in the memory
+29            batch_size = len(memory)
+30        #We are taking a random sample of 32 so not to overfit our algo
+31        batch = random.sample(memory, batch_size)
+32        #We itereate over every memory we've stored in that memory batch of 32
+33        for input_img, action, reward, input_next_img, game_over in batch:
+34            #if in that memory our game was over then we set the target_reward equal to reward
+35            target_reward = reward
+36            #If our game was not over
+37            if game_over == False:
+38            #This essentially is the bellman equation
+39            #expected long-term reward for a given action is equal to the 
+40            #immediate reward from the current action combined with the expected 
+41            #reward from the best future action taken at the following state.
+42            #The model isn't certain that for that specific action it will get the best reward
+43            #It's based on probability of the action, if the probability of that action is in the
+44            #negatives then our future reward is going to be further decreased by our learning rate
+45            #This is just the model being cautious, as to not set an impossible reward target
+46            #If the reward is impossible then the algorithm might not converge
+47            #Converge as in a stable condition where it can play the game without messing up
+48                target_reward = reward + learningRate * \
+49                np.amax(model.predict(input_next_img)[0])
+50            #So from above we essentially know what is going to happen(input_next_img) 
+51            #assuming the game wasn't over, the algorithm did well.
+52            #So we want the algorithm to perform the same, essentially we
+53            #persuade the algorithm to do what it did to get that reward
+54            #so we make the algorithm predict from the previous frame(input_img)
+55            #but we alter its prediction according to the action that got the highest
+56            #reward and...
+57            desired_target = model.predict(input_img)
+58            #we set that as the target_reward...
+59            desired_target[0][action] = target_reward
+60            #So to make the algo perform the same, we associate the input_img with the
+61            #target we want and we fit it
+62            model.fit(input_img, desired_target, epochs=1, verbose=0)
+63        #Finally we check if our exploration factor is bigger than our minimum exploration
+64        #if so we decrease it by the decay to reduce exploration, we do this every game
+65        if epsilon > epsilon_min:
+66            epsilon *= epsilon_decay
+```
+**Line 3** After the action we get our next frame, and errors if any.
+
+**Line 5-Line 6** If the function CalculateLanes does not return any errors then we reward the algorithm.
+
+**Line 9-Line 10** If it does return errors then we say that the game is over. I have set it up like that so the algorithm can learn to drive within lanes. The error is associated with either the lanes not being detected or simply because the car was not within any lanes to detect. The latter being more probable and thus provides reason for the specific guidelines. 
+
+**Line 13-Line 15** Regardless the status of the game_over variable, we want to record the gameplay that happened. This enables the algorithm to learn from it's mistakes. So in this piece of code, we check whether the memory is full or not, if so we delete the very first item appended.
+
+**Line 17** We append to the memory array.
+
+**Line 19** We set our next set of frames to our current set of frames. Essentially progressing our variable input_img to the next undecided action.
+
+**Line 20-Line 21** If game was over we print out our statistics. 
+
+**Line 24-Line 29** This simply put is the setup for our replay section of the Q-algorithm. We want to select random sample of batches to train our algorithm with. Our default batch size is 32, but at the begining there wouldn't be enough to sample 32 batches. Therefore, we train the algorithm with the whole memory array.
+
+**Line 33-Line 35** Iterating over our memory, we begin by setting our target reward to our reward in the first sample memory. 
+
+**Line 37-Line 49** In that memory if our game wasn't over than that means our algorithm performed well. So we want to persuade our algorithm to do the same thing in the future. Therefore we set our future reward (target reward) to the current reward from the current action combined with the expected reward from the best future action taken at the following state. We multiply by our learningRate to avoid converging problems. We are essentially increasing the probability of our desired action.
+
+**Line 57** Here we ask the algorithm again what it might predict for the previous state.
+
+**Line 59** We manipulate the prediction, we take the prediction and insert our own probability of our corresponding action. Simply telling the algorithm that for a situation like this you should do this.
+
+**Line 62** The manipulations and the results we feed it into our model to train it for a single epoch.
+
+**Line 65-Line 66** Finally, after everything is done, we decrease our exploration rate by multiplying our epsilon with our epsilon decay rate.
