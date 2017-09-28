@@ -35,7 +35,8 @@ Unfortunately, it takes the screen shot of the entire screen if coordinates aren
 The picture below depicts my environment.
 
 <p align="center">
-  Layout as displayed on my screen<img width="800" height="600" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/Environment.png">
+  Layout as displayed on my screen
+  <img width="800" height="600" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/Environment.png">
 </p>
 <p>
   <img width="600" height="4" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
@@ -120,7 +121,8 @@ They were not very clear in the RGB space, therefore HSL was used.
 **Line 20** The bitwise_and function basically takes a look at the pixel values and if the pixel value in the mask and the pixel value in the image have the same value they are kept, if they are different then it is set to 0. We are left with a image with only yellow region visible.
 
 <p align="center">
-  Yellow Image<img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/YellowImg.png">
+  Yellow Image<br>
+  <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/YellowImg.png">
 </p>
 
 **Line 22** Now we convert our image to grayscale. We do this in order to make the edge detection more accurate. The canny edge detection function used later on essentially measures magnitude of pixel intensity changes. Therefore if we have colors that are similar to each other there isn't a big change in pixel intensity and it might not be considered an edge and ofcourse grayscale images are less computation heavy.
@@ -138,7 +140,8 @@ They were not very clear in the RGB space, therefore HSL was used.
 **Line 43** Finally we take our blurred image and we apply our mask to it. So the white region of our mask is replaced with our image while the rest is black (not used)
 
 <p align="center">
-  croppedImg<img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/croppedImg.png">
+  croppedImg<br>
+  <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/croppedImg.png">
 </p>
 
 Great now we've managed to narrow down our edges to the region that we are interested in. Thats most of the processing done. We now want to get the appropriate lines and combine them into lanes. The next half of this function does exactly that.
@@ -236,7 +239,8 @@ Great now we've managed to narrow down our edges to the region that we are inter
 **Line 70** If all goes well we output our final processed image.
 
 <p align="center">
-  finalImg<img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/finalImg.png">
+  finalImg<br>
+  <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/finalImg.png">
 </p>
 
 Now we can go ahead and explore the next part of the code. The next part walks you through how we take the processed frames of our game and format it so we can get it ready to input it into our CNN.
