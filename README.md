@@ -8,6 +8,10 @@
 </p>
 
 ## Introduction
+<p align="center">
+  Self Driving car after 50 epochs of training<br>
+  <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/SelfDrivingAfter50Epochs.gif">
+</p>
 
 Some point in our life as programmers we all wonder how a self driving car is actually made. I went through the same phase and so here it is, a very simple DIGITAL self driving car controlled using Python with a Reinforcement Q-learning algorithm as well as a Convolutional Neural Network.
 
