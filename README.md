@@ -35,7 +35,7 @@ Unfortunately, it takes the screen shot of the entire screen if coordinates aren
 The picture below depicts my environment.
 
 <p align="center">
-  <img width="800" height="600" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/Environment.png">
+  <img width="800" height="600" title="Layout as displayed on my screen" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/Environment.png">
 </p>
 <p>
   <img width="600" height="4" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
@@ -119,6 +119,10 @@ They were not very clear in the RGB space, therefore HSL was used.
 
 **Line 20** The bitwise_and function basically takes a look at the pixel values and if the pixel value in the mask and the pixel value in the image have the same value they are kept, if they are different then it is set to 0. We are left with a image with only yellow region visible.
 
+<p align="center">
+  <img width="400" height="300" title="Yellow Image" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/YellowImg.png">
+</p>
+
 **Line 22** Now we convert our image to grayscale. We do this in order to make the edge detection more accurate. The canny edge detection function used later on essentially measures magnitude of pixel intensity changes. Therefore if we have colors that are similar to each other there isn't a big change in pixel intensity and it might not be considered an edge and ofcourse grayscale images are less computation heavy.
 
 **Line 26** We now apply a gaussian blur. We do this in order to get rid of rough edges. Some realistic games or even in real life there are cracks on the road that might be considered something of interest so in order to get rid of the "noisy edges" we apply a blur
@@ -132,6 +136,10 @@ They were not very clear in the RGB space, therefore HSL was used.
 **Line 39** The points that defined our ROI (Polygon), we fill the mask with the color white (255) inside that shape.
 
 **Line 43** Finally we take our blurred image and we apply our mask to it. So the white region of our mask is replaced with our image while the rest is black (not used)
+
+<p align="center">
+  <img width="400" height="300" title="croppedImg" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/croppedImg.png">
+</p>
 
 Great now we've managed to narrow down our edges to the region that we are interested in. Thats most of the processing done. We now want to get the appropriate lines and combine them into lanes. The next half of this function does exactly that.
 
@@ -226,6 +234,10 @@ Great now we've managed to narrow down our edges to the region that we are inter
 **Line 65-Line 68** If there are any errors or a lane wasn't detected then we simply just output our original image.
 
 **Line 70** If all goes well we output our final processed image.
+
+<p align="center">
+  <img width="400" height="300" title="finalImg" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/finalImg.png">
+</p>
 
 Now we can go ahead and explore the next part of the code. The next part walks you through how we take the processed frames of our game and format it so we can get it ready to input it into our CNN.
 
@@ -534,3 +546,7 @@ Halfway through! From here we can now actually start studying the bulk of the Q-
 **Line 62** The manipulations and the results we feed it into our model to train it for a single epoch.
 
 **Line 65-Line 66** Finally, after everything is done, we decrease our exploration rate by multiplying our epsilon with our epsilon decay rate.
+
+## Conclusion
+
+Well thats it for the self driving car! You can definitely make your algorithm more complex by adding different directions, making your convolutional layers deeper etc. You can even apply this to another car game, create your own guidelines and own methods of rewards! If there are any question please don't hesitate to contact me, I am happy to help. I am open to feedback and different ways in which I could improve this, maybe you have a better way of doing this. Other than any questions, if you find a mistake while reading through this please let me know! Happy coding!
