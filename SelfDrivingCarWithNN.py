@@ -39,8 +39,8 @@ def CalculateLanes(OrgImage):
     #The 0 is the sigmaX and SigmaY standard deviation usually taken as 0
     blurredImg = cv2.GaussianBlur(GrayImg, (5, 5), 0)
     #Detect edges in the image
-    #720 is the max val, any edges above the intensity gradient of 720 are edges
-    #50 is the lowest intensity gradient, anything below is not an edge
+    #700 is the max val, any edges above the intensity gradient of 700 are edges
+    #200 is the lowest intensity gradient, anything below is not an edge
     imageWithEdges = cv2.Canny(blurredImg, threshold1=200, threshold2=700)
     #These are the points of our trapezoid/hexagon that we crop out 
     points = np.array([[0, 310],[0, 300], [220, 210], [380, 210], [600, 300], [600, 310]])
@@ -95,7 +95,7 @@ def CalculateLanes(OrgImage):
         #Having an equation of a line (assume infinite) we can select arbitrary points and find
         #the x or y value accordingly.
         #So we select arbitrary points for y1 = croppedImg.shape[0]
-        #and for y2 = y1*0.5
+        #and for y2 = y1*0.6
         #We all need them to be int so cv2.line can use them
         LeftX1 = int((croppedImg.shape[0] - left_lane[1])/left_lane[0])
         LeftX2 = int(((croppedImg.shape[0]*0.6) - left_lane[1])/left_lane[0])
@@ -141,7 +141,7 @@ def getFrames():
     img, errors = CalculateLanes(gameImg)
     #You can show the render if you want with the lanes detections
     cv2.imshow('window', img)
-    #To furhter process the image we convert it to a grayscale
+    #To further process the image we convert it to a grayscale
     img = cv2.cvtColor(cv2.resize(img, (84, 84)), cv2.COLOR_BGR2GRAY)
     #In order for Keras to accept data we reshape it into the specific format
     #I want to use an image thats 84x84
@@ -288,6 +288,12 @@ for i in range(epochs):
         #expected long-term reward for a given action is equal to the 
         #immediate reward from the current action combined with the expected 
         #reward from the best future action taken at the following state.
+        #The model isn't certain that for that specific action it will get the best reward
+        #It's based on probability of the action, if the probability of that action is in the
+        #negatives then our future reward is going to be further decreased by our learning rate
+        #This is just the model being cautious, as to not set an impossible reward target
+        #If the reward is impossible then the algorithm might not converge
+        #Converge as in a stable condition where it can play the game without messing up
             target_reward = reward + learningRate * \
             np.amax(model.predict(input_next_img)[0])
         #So from above we essentially know what is going to happen(input_next_img) 
