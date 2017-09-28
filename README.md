@@ -20,8 +20,14 @@ You can essentially apply this to any game, the algorithm can be adapted and the
 ```
 Note: You need to have sufficient knowledge about Reinforcment learning before progressing, this tutorial 
 only explains the code it does not go into the theoretical details
-The links below help explain the theoretical details:
+The links below help explain the theoretical other details I had problems with:
 
+https://stats.stackexchange.com/questions/221402/understanding-the-role-of-the-discount-factor-in-reinforcement-learning
+http://mnemstudio.org/path-finding-q-learning-tutorial.htm
+https://yanpanlau.github.io/2016/07/10/FlappyBird-Keras.html
+https://keon.io/deep-q-learning/
+https://en.wikipedia.org/wiki/Q-learning
+https://medium.com/emergent-future/simple-reinforcement-learning-with-tensorflow-part-0-q-learning-with-tables-and-neural-networks-d195264329d0
 ```
 
 We will be using Keras to make the magic happen with Tensorflow backend. Assuming you are familiar with Keras and Tensorflow and have them installed we can start!
@@ -223,6 +229,8 @@ Great now we've managed to narrow down our edges to the region that we are inter
 69      #If all goes well, we return the image with the detected lanes
 70      return finalImg, errors
 ```
+**Line 6-Line 9** We initiate empty lists for our data. Left and right lines and their corresponding lengths. 
+
 **Line 4** The function HoughLines is quite difficult to understand. In layman term it is simply detecting lines in our region and returning coordinates. We set a threshold of 180 the length, and the thickness being 5. To find out more about hough transformation, go to this [link](http://www.swarthmore.edu/NatSci/mzucker1/opencv-2.4.10-docs/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html)
 
 **Line 12-Line 30** Looping over all the detected lines we take one line at a time and we calculate the intercept and the slope. We omit horizontal and vertical lines as our lanes will never be straight in that perspective. Finally, depending on the slope we append our lines accordingly to the right and left lanes.
