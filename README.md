@@ -13,9 +13,9 @@
   <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/SelfDrivingAfter50Epochs.gif">
 </p>
 
-Some point in our life as programmers we all wonder how a self driving car is actually made. I went through the same phase and so here it is, a very simple DIGITAL self driving car controlled using Python with a Reinforcement Q-learning algorithm as well as a Convolutional Neural Network.
+Some point in our life as programmers we all wonder how a self driving car is actually programmed. I went through the same phase and so here it is, a very simple DIGITAL self driving car controlled using Python with a Reinforcement Q-learning algorithm as well as a Convolutional Neural Network.
 
-You can essentially apply this to any game, the algorithm can be adapted and the reward rules can be changed to allow for different outcomes. I will go through the code step by step explaining what each line does and once you've mastered it you can go ahead fork the code and do as you wish.
+You can essentially apply this to any game, the algorithm can be adapted and the reward rules can be changed to allow for different outcomes. As we go through the code I will explain step by step what each line does and once you've mastered it you can go ahead fork the code and do as you wish.
 
 ```
 Note: You need to have sufficient knowledge about Reinforcment learning before progressing, this tutorial 
@@ -33,8 +33,8 @@ and RNN if you are unfamiliar with Keras/Tensorflow!
 
 ## My Setup
 
-In order to detect lanes, we need to send frames of our game to the algorithm for processing. I used a library called [mss](https://pypi.python.org/pypi/mss/)(MultipleScreenShot), it allows the users to take quick screenshots with almost minimal effect in FPS.
-Unfortunately, it takes the screen shot of the entire screen if coordinates aren't specified, therefore in order to just get the frames of the game, the game needs to be properly positioned. 
+In order to detect lanes, we need to send game frames to the algorithm for processing. I used a library called [mss](https://pypi.python.org/pypi/mss/)(MultipleScreenShot), it allows the users to take quick screenshots with almost minimal effect in FPS.
+Unfortunately, it takes the screen shot of the entire screen if coordinates aren't specified, therefore in order to get game frames, the game needs to be properly positioned. 
 
 The picture below depicts my environment.
 
@@ -46,7 +46,8 @@ The picture below depicts my environment.
   <img width="600" height="4" src="http://getthedrift.com/wp-content/uploads/2015/06/White-Space.png">
 </p>
 You can set it up anyway you want but make sure to change the coordinates of the ScreenShot module so it only covers the game area.
-Before we start the implementation it is a good idea to have the code open on the side as the comments have details you wouldn't want to miss.
+
+Before we start the implementation it's a good idea to have the code open on the side as the comments have details you wouldn't want to miss.
 
 ## Implementation
 
@@ -64,7 +65,7 @@ Before we start the implementation it is a good idea to have the code open on th
 10    import time
 ```
 We start by importing a couple libraries. 
-In order we import OpenCV, our Mss library, Numpy for computation, Keras for our CNN, Pyautogui to control our keyboard, Random and finally Time for delay purposes.
+In order, we import OpenCV, our Mss library, Numpy for computation, Keras for our CNN, Pyautogui to control our keyboard, Random and finally Time for delay purposes.
 
 ### Detecting Lanes
 ```python
@@ -118,7 +119,7 @@ In order we import OpenCV, our Mss library, Numpy for computation, Keras for our
 **Line 8** The lanes in the game are yellow and so we convert our image to the HSL color space in order to enhance our lanes.
 They were not very clear in the RGB space, therefore HSL was used.
 
-**Line 13&14** We define our upper and lower limit of the color space. Although the boundaries are given in terms of RGB it is actually in HSL. The comments are in RGB to make it easier to understand. Those limits represent the region where the color yellow falls within. Therefore, we use those limits so we can seek out a similar color in our image.
+**Line 13&14** We define our upper and lower limit of the color space. Although the boundaries are given in terms of RGB it is actually in HSL. The comments are in RGB to make it easier to understand. Those limits represent the region where the color yellow falls within. Therefore, we use those limits so we can seek out a similar color.
 
 **Line 17** Now we apply the limits to our HSL image. It seeks out the color yellow and sets the rest of the pixels of the image to 0. We have essentially created a mask. An area where relevant pixels keep their values and the ones not needed are set to 0. 
 
@@ -129,19 +130,19 @@ They were not very clear in the RGB space, therefore HSL was used.
   <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/YellowImg.png">
 </p>
 
-**Line 22** Now we convert our image to grayscale. We do this in order to make the edge detection more accurate. The canny edge detection function used later on essentially measures magnitude of pixel intensity changes. Therefore if we have colors that are similar to each other there isn't a big change in pixel intensity and it might not be considered an edge and ofcourse grayscale images are less computation heavy.
+**Line 22** Now we can convert our image to grayscale. We do this in order to make the edge detection more accurate. The canny edge detection function used later on essentially measures the magnitude of pixel intensity changes. Therefore if we have colors that are similar to each other there isn't a big change in pixel intensity and it might not be considered an edge. Grayscale images are also less computation heavy.
 
-**Line 26** We now apply a gaussian blur. We do this in order to get rid of rough edges. Some realistic games or even in real life there are cracks on the road that might be considered something of interest so in order to get rid of the "noisy edges" we apply a blur
+**Line 26** We now apply a gaussian blur. We do this in order to get rid of rough edges. Some realistic games or even in real life there are cracks on the road that might be considered something of interest so in order to get rid of the "noisy edges" we apply a blur.
 
 **Line 30** Now we finally apply the edge detection function. We have thresholds that identify what can and cannot be considered an edge.
 
-**Line 32** We don't want all the edges detected in the image. We only want those that concern the lanes. So we create a region of interest, coordinates. 
+**Line 32** We don't want all the edges detected in the image. We only want those that concern the lanes. So we create a region of interest, a specific set of coordinates. 
 
 **Line 36** We create an empty black mask with the same space dimension as our image.
 
-**Line 39** The points that defined our ROI (Polygon), we fill the mask with the color white (255) inside that shape.
+**Line 39** Anything around the polygon defined by our ROI is filled with black while the inside is filled with the color white (255).
 
-**Line 43** Finally we take our blurred image and we apply our mask to it. So the white region of our mask is replaced with our image while the rest is black (not used)
+**Line 43** Finally we take our blurred image and we apply our mask to it. So the white region of our mask is replaced with our image while the rest is black (not used).
 
 <p align="center">
   croppedImg<br>
@@ -222,32 +223,32 @@ Great now we've managed to narrow down our edges to the region that we are inter
 69      #If all goes well, we return the image with the detected lanes
 70      return finalImg, errors
 ```
-**Line 4** The function HoughLines is quite difficult to understand. In laymans term it is simply detecting lines in our region and returning coordinates of those lines. We set a threshold of 180 essentially being the length and the thickness being 5. To find out more about hough transformation, go to this [link](http://www.swarthmore.edu/NatSci/mzucker1/opencv-2.4.10-docs/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html)
+**Line 4** The function HoughLines is quite difficult to understand. In layman term it is simply detecting lines in our region and returning coordinates. We set a threshold of 180 the length, and the thickness being 5. To find out more about hough transformation, go to this [link](http://www.swarthmore.edu/NatSci/mzucker1/opencv-2.4.10-docs/doc/tutorials/imgproc/imgtrans/hough_lines/hough_lines.html)
 
 **Line 12-Line 30** Looping over all the detected lines we take one line at a time and we calculate the intercept and the slope. We omit horizontal and vertical lines as our lanes will never be straight in that perspective. Finally, depending on the slope we append our lines accordingly to the right and left lanes.
 
-**Line 35-Line 36** We want to combine all our lines into lanes. We compute the dot product of the lines and their respective lengths. Longer lines have a heavier effect and so the slopes and intercepts of those line will be more dominant. Finally divide by the lengths to essentially normalise the values(So can be mapped to the image)
+**Line 35-Line 36** We want to combine all our lines into lanes. We compute the dot product of the lines and their respective lengths. Longer lines have a heavier effect and so the slopes and intercepts of those line will be more dominant. Finally divide by the lengths to essentially normalise the values(So it can be mapped to the image)
 
-**Line 44-Line 47** We have the lanes, but in order to draw them we need coordinates. To draw any line (assuming infinite) you can pick arbitrary points, in this case I picked arbitrary y values. Using these I calculate the x values thus coordinates.
+**Line 44-Line 47** We have the lanes, but in order to draw them we need coordinates. To draw any line (assuming infinite) any arbitrary point can be used. Using the arbitrary y values I calculate the x values.
 
 **Line 48-Line49** Now we just group those points accordingly to the right and left lanes.
 
-**Line 53** We want to draw the line on top of our image. But in order to do that we need to have an overlay image. So here, we create an empty image with the same space dimensions as our original image. 
+**Line 53** We want to draw the line on top of our image. But in order to do that we need to have an overlay image. So here, we create an empty image with the same space dimensions as our original. 
 
 **Line 56-Line 57** Then we draw our lines on our empty image. The color used is blue as the format is BGR and not RGB.
 
-**Line 63** Finally we combine the two images. This is done by calculating the weighted sum of the two arrays of images. In our empty image most of the pixels are set to 0 and so only the lane pixels will be effected in our original image.
+**Line 63** Finally we combine the two images. This is done by calculating the weighted sum of the two arrays of images. In our empty image most of the pixels are set to 0 and so only the lane pixels will be effected.
 
-**Line 65-Line 68** If there are any errors or a lane wasn't detected then we simply just output our original image.
+**Line 65-Line 68** If any errors or a lane wasn't detected then we simply just output our original image.
 
-**Line 70** If all goes well we output our final processed image.
+**Line 70** If all goes well, we output our final processed image.
 
 <p align="center">
   finalImg<br>
   <img width="400" height="300" src="https://github.com/sagar448/Self-Driving-Car-3D-Simulator-With-CNN/blob/master/src/finalImg.png">
 </p>
 
-Now we can go ahead and explore the next part of the code. The next part walks you through how we take the processed frames of our game and format it so we can get it ready to input it into our CNN.
+Now we can go ahead and explore the next part of the code. The next part explains how to format our processed images so it could be accepted by our Keras CNN.
 
 ```python
 1     #Processes the images and returns the required data
@@ -282,19 +283,19 @@ Now we can go ahead and explore the next part of the code. The next part walks y
 ```
 **Line 2** This function essentially processes our screenshots using the lane detection function and then formats the image data so we can then use it with our CNN.
 
-**Line 4** We initialise our screenshot library here
+**Line 4** We initialise our screenshot library here.
 
 **Line 7** Game stores the dimensions of our screenshots. It represents the area of the screen we took the screenshot of.
 
-**Line 9** We convert it to a numpy array for further processing
+**Line 9** We convert it to a numpy array for further processing.
 
-**Line 11** I resized the image so when it comes to displaying it, it can fit on my screen. Note, if you change the size of the screen you will need to edit the coordinates of the ROI mask in the lane detection function in order to account for the size increase or decrease.
+**Line 11** I resized the image so when we display it, it can fit on the screen. Note, if you change the size of the screen you will need to edit the coordinates of the ROI mask in the lane detection function in order to account for the size increase or decrease.
 
-**Line 14** We now call the CalculateLane() function passing the resized game screenshot as a paramter. It returns the either the original image back to us if it detects nothing or it returns 
+**Line 14** We now call the CalculateLane() function passing the resized game screenshot as a paramter. It returns either the original image back to us or it returns our image with detected lanes. 
 
 **Line 16** You can choose to render your detection but it will slow down the process quite a bit.
 
-**Line 18** We can now start formatting our image for our CNN. Our first step is to resize it to a suitable size for the CNN to process as well as convert it to grayscale.
+**Line 18** We can now start formatting our image for our CNN. Our first step is to resize it to a suitable size for the CNN to process as well as to convert it to grayscale.
 
 **Line 21** Since Keras needs a specific dimension we reshape our image to 1x84x84. The 1 is essentially the batch number.
 
@@ -322,13 +323,13 @@ def left():
     p.keyDown("left")
     p.keyUp("left")
 ```
-**Function straight()** Key Down function presses the specific key on our keyboard. So we KeyDown the up key at the end. KeyUp is important as KeyDown holds the key, so we need to release it. This function is responsible for accelerating our car.
+**Function straight()** Key Down function presses the specific key on our keyboard. KeyUp is important as KeyDown holds the key, so we need to release it. This function is responsible for accelerating our car.
 
 **Function right()** Turns our car to the right.
 
 **Function left()** Turns our car to the left.
 
-We are now ready to start building our CNN model. Our model will be quite similar to the other CNN models in the past, we will be trying to map our image data to the actions of the car.
+We are now ready to start building our CNN model. Our model will be quite similar to the other CNN models in the past, we will try to map our image data to the actions.
 ```python
 1     #For now we make the car accelerate, turn right and turn left
 2     moves = 3
@@ -369,23 +370,23 @@ We are now ready to start building our CNN model. Our model will be quite simila
 37    model.compile(loss='mean_squared_error',
 38                  optimizer=SGD())
 ```
-**Line 2** As shown in the above code, our car can do 3 things. Accelerate, turn right and turn left. Thus we set our moves variable to 3.
+**Line 2** As shown in the code above, our car can do 3 things. Accelerate, turn right and turn left. Thus we set our moves variable to 3.
 
 **Line 4** This is our discount rate. We want our immediate reward to be worth more than our future reward therefore we discount the future reward in order make the current reward stand out. This is because our model is uncertain what the next step may be. (More on this later)
 
 **Line 7** This is the exploration rate. We want our algorithm to start off by trying different actions.
 
-**Line 9** We don't want our model to ever stop trying random actions so we set our minimum exploration rate
+**Line 9** We don't want our model to ever stop trying random actions so we set our minimum exploration rate.
 
-**Line 12** This is the rate at which our exploration factor decays
+**Line 12** This is the rate at which our exploration factor decays.
 
-**Line 14** This is the number of games we want to play in total
+**Line 14** This is the number of games we want to play in total.
 
 **Line 16** All the games ever played go in here. We want our model to learn from its mistakes.
 
-**Line 18** We don't want to store too many games as it becomes computation heavy
+**Line 18** We don't want to store too many games as it becomes computation heavy.
 
-Now we start building our CNN model.
+Now we can start building our actual CNN model.
 
 **Line 21** We initialise our machine learning algorithm.
 
@@ -393,7 +394,7 @@ Now we start building our CNN model.
 
 **Line 29-Line 30** We add another two convolutional layers for better accuracy.
 
-**Line 32-Line 33** We flatten our data so we could put it through a hidden layer of a simple neural network.
+**Line 32-Line 33** We flatten our data so we can put it through a hidden layer of a simple neural network.
 
 **Line 35** This is the final output layer with 3 nodes. It calculates the probability of our 3 actions. 
 
@@ -440,7 +441,7 @@ Finally, we've reached the last step of the tutorial, our Q-Learning algorithm. 
 ```
 **Line 2** We loop over the amount of games we want to play. In this case I have set the epochs to 100. 
 
-**Line 3** Originally I had left the time.sleep in the program as this allowed me to prepare for the start of the algorithm but it also slows down the learning stage therefore it is commented.
+**Line 3** Originally I had left the time.sleep in the program as this allowed me to prepare for the start of the algorithm but it also slows down the learning stage therefore it is commented out.
 
 **Line 5** The AI is about to start playing the game so we originally set the game_over to false. We will need it later.
 
@@ -529,7 +530,7 @@ Halfway through! From here we can now actually start studying the bulk of the Q-
 ```
 **Line 3** After the action we get our next frame, and errors if any.
 
-**Line 5-Line 6** If the function CalculateLanes does not return any errors then we reward the algorithm.
+**Line 5-Line 6** After the action has been performed and we have the next frame with calculated lanes and it does not return any errors then we reward the algorithm.
 
 **Line 9-Line 10** If it does return errors then we say that the game is over. I have set it up like that so the algorithm can learn to drive within lanes. The error is associated with either the lanes not being detected or simply because the car was not within any lanes to detect. The latter being more probable and thus provides reason for the specific guidelines. 
 
@@ -537,7 +538,7 @@ Halfway through! From here we can now actually start studying the bulk of the Q-
 
 **Line 17** We append to the memory array.
 
-**Line 19** We set our next set of frames to our current set of frames. Essentially progressing our variable input_img to the next undecided action.
+**Line 19** We set our next set of frames to our current set of frames. Essentially progressing our variable input_img to the next undecided action frame.
 
 **Line 20-Line 21** If game was over we print out our statistics. 
 
@@ -549,9 +550,9 @@ Halfway through! From here we can now actually start studying the bulk of the Q-
 
 **Line 57** Here we ask the algorithm again what it might predict for the previous state.
 
-**Line 59** We manipulate the prediction, we take the prediction and insert our own probability of our corresponding action. Simply telling the algorithm that for a situation like this you should do this.
+**Line 59** We manipulate the prediction, we take the prediction and insert our own probability of our corresponding action. Simply telling the algorithm that for a situation like this we want this action to be performed.
 
-**Line 62** The manipulations and the results we feed it into our model to train it for a single epoch.
+**Line 62** We feed the manipulations and the results into our model to train it for a single epoch.
 
 **Line 65-Line 66** Finally, after everything is done, we decrease our exploration rate by multiplying our epsilon with our epsilon decay rate.
 
