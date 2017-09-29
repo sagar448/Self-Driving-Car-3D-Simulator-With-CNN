@@ -20,7 +20,7 @@ You can essentially apply this to any game, the algorithm can be adapted and the
 ```
 Note: You need to have sufficient knowledge about Reinforcment learning before progressing, this tutorial 
 only explains the code it does not go into the theoretical details
-The links below help explain the theoretical other details I had problems with:
+The links below help explain the theoretical details as well as other details I had problems with:
 
 https://stats.stackexchange.com/questions/221402/understanding-the-role-of-the-discount-factor-in-reinforcement-learning
 http://mnemstudio.org/path-finding-q-learning-tutorial.htm
