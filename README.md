@@ -474,95 +474,96 @@ Halfway through! From here we can now actually start studying the bulk of the Q-
 3             input_next_img, errors = getFrames()
 4             #If we detect lanes and therefore no errors occur we reward the algorithm
 5             if errors == False:
-6                 reward = reward + 1
+6                 reward = 1
 7             #Else if there we detect no lanes and so there is an error we 
 8             #say its game over
 9             else:
-10                game_over = True
-11            #Game over or not we want to keep record of the steps the algo took
-12            #We first check if the total memoery length is bigger than the max memory
-13            if len(memory) >= max_memory:
-14                #If more memory then needed we delete the first ever element we added
-15                del memory[0]
-16            #We append it to our memory list
-17            memory.append((input_img, action, reward, input_next_img, game_over))
-18            #Next we set our input_img to our latest data
-19            input_img = input_next_img
-20            if game_over:
-21                print("Game: {}/{}, Total Reward: {}".format(i, epochs, reward))
-22        #Once the game is over we want to train our algo with the data we just collected
-23        #We check if our memory length is bigger than our batch size 
-24        if len(memory) > 32:
-25        #If so then we set the batch_size to 32
-26            batch_size = 32
-27        else:
-28        #Else we set our batch size to whatever is in the memory
-29            batch_size = len(memory)
-30        #We are taking a random sample of 32 so not to overfit our algo
-31        batch = random.sample(memory, batch_size)
-32        #We itereate over every memory we've stored in that memory batch of 32
-33        for input_img, action, reward, input_next_img, game_over in batch:
-34            #if in that memory our game was over then we set the target_reward equal to reward
-35            target_reward = reward
-36            #If our game was not over
-37            if game_over == False:
-38            #This essentially is the bellman equation
-39            #expected long-term reward for a given action is equal to the 
-40            #immediate reward from the current action combined with the expected 
-41            #reward from the best future action taken at the following state.
-42            #The model isn't certain that for that specific action it will get the best reward
-43            #It's based on probability of the action, if the probability of that action is in the
-44            #negatives then our future reward is going to be further decreased by our learning rate
-45            #This is just the model being cautious, as to not set an impossible reward target
-46            #If the reward is impossible then the algorithm might not converge
-47            #Converge as in a stable condition where it can play the game without messing up
-48                target_reward = reward + learningRate * \
-49                np.amax(model.predict(input_next_img)[0])
-50            #So from above we essentially know what is going to happen(input_next_img) 
-51            #assuming the game wasn't over, the algorithm did well.
-52            #So we want the algorithm to perform the same, essentially we
-53            #persuade the algorithm to do what it did to get that reward
-54            #so we make the algorithm predict from the previous frame(input_img)
-55            #but we alter its prediction according to the action that got the highest
-56            #reward and...
-57            desired_target = model.predict(input_img)
-58            #we set that as the target_reward...
-59            desired_target[0][action] = target_reward
-60            #So to make the algo perform the same, we associate the input_img with the
-61            #target we want and we fit it
-62            model.fit(input_img, desired_target, epochs=1, verbose=0)
-63        #Finally we check if our exploration factor is bigger than our minimum exploration
-64        #if so we decrease it by the decay to reduce exploration, we do this every game
-65        if epsilon > epsilon_min:
-66            epsilon *= epsilon_decay
+10                reward = 0
+11                game_over = True
+12            #Game over or not we want to keep record of the steps the algo took
+13            #We first check if the total memory length is bigger than the max memory
+14            if len(memory) >= max_memory:
+15                #If more memory then needed we delete the first ever element we added
+16                del memory[0]
+17            #We append it to our memory list
+18            memory.append((input_img, action, reward, input_next_img, game_over))
+19            #Next we set our input_img to our latest data
+20            input_img = input_next_img
+21            if game_over:
+22                print("Game: {}/{}, Total Reward: {}".format(i, epochs, reward))
+23        #Once the game is over we want to train our algo with the data we just collected
+24        #We check if our memory length is bigger than our batch size 
+25        if len(memory) > 32:
+26        #If so then we set the batch_size to 32
+27            batch_size = 32
+28        else:
+29        #Else we set our batch size to whatever is in the memory
+30            batch_size = len(memory)
+31        #We are taking a random sample of 32 so not to overfit our algo
+32        batch = random.sample(memory, batch_size)
+33        #We itereate over every memory we've stored in that memory batch of 32
+34        for input_img, action, reward, input_next_img, game_over in batch:
+35            #if in that memory our game was over then we set the target_reward equal to reward
+36            target_reward = reward
+37            #If our game was not over
+38            if game_over == False:
+39            #This essentially is the bellman equation
+40            #expected long-term reward for a given action is equal to the 
+41            #immediate reward from the current action combined with the expected 
+42            #reward from the best future action taken at the following state.
+43            #The model isn't certain that for that specific action it will get the best reward
+44            #It's based on probability of the action, if the probability of that action is in the
+45            #negatives then our future reward is going to be further decreased by our learning rate
+46            #This is just the model being cautious, as to not set an impossible reward target
+47            #If the reward is impossible then the algorithm might not converge
+48            #Converge as in a stable condition where it can play the game without messing up
+49                target_reward = reward + learningRate * \
+50                np.amax(model.predict(input_next_img)[0])
+51            #So from above we essentially know what is going to happen(input_next_img) 
+52            #assuming the game wasn't over, the algorithm did well.
+53            #So we want the algorithm to perform the same, essentially we
+54            #persuade the algorithm to do what it did to get that reward
+55            #so we make the algorithm predict from the previous frame(input_img)
+56            #but we alter its prediction according to the action that got the highest
+57            #reward and...
+58            desired_target = model.predict(input_img)
+59            #we set that as the target_reward...
+60            desired_target[0][action] = target_reward
+61            #So to make the algo perform the same, we associate the input_img with the
+62            #target we want and we fit it
+63            model.fit(input_img, desired_target, epochs=1, verbose=0)
+64        #Finally we check if our exploration factor is bigger than our minimum exploration
+65        #if so we decrease it by the decay to reduce exploration, we do this every game
+66        if epsilon > epsilon_min:
+67            epsilon *= epsilon_decay
 ```
 **Line 3** After the action we get our next frame, and errors if any.
 
-**Line 5-Line 6** After the action has been performed and we have the next frame with calculated lanes and it does not return any errors then we reward the algorithm.
+**Line 5-Line 6** After the action has been performed and we have the next frame with calculated lanes and it does not return any errors then we set the reward to 1.
 
-**Line 9-Line 10** If it does return errors then we say that the game is over. I have set it up like that so the algorithm can learn to drive within lanes. The error is associated with either the lanes not being detected or simply because the car was not within any lanes to detect. The latter being more probable and thus provides reason for the specific guidelines. 
+**Line 9-Line 11** If it does return errors then we say that the game is over. I have set it up like that so the algorithm can learn to drive within lanes. The error is associated with either the lanes not being detected or simply because the car was not within any lanes to detect. The latter being more probable and thus provides reason for the specific guidelines.  I also set the reward to 0 as the algorithm fails to achieve its goal
 
-**Line 13-Line 15** Regardless the status of the game_over variable, we want to record the gameplay that happened. This enables the algorithm to learn from it's mistakes. So in this piece of code, we check whether the memory is full or not, if so we delete the very first item appended.
+**Line 14-Line 16** Regardless the status of the game_over variable, we want to record the gameplay that happened. This enables the algorithm to learn from it's mistakes. So in this piece of code, we check whether the memory is full or not, if so we delete the very first item appended.
 
-**Line 17** We append to the memory array.
+**Line 18** We append to the memory array.
 
-**Line 19** We set our next set of frames to our current set of frames. Essentially progressing our variable input_img to the next undecided action frame.
+**Line 20** We set our next set of frames to our current set of frames. Essentially progressing our variable input_img to the next undecided action frame.
 
-**Line 20-Line 21** If game was over we print out our statistics. 
+**Line 21-Line 22** If game was over we print out our statistics. 
 
-**Line 24-Line 29** This simply put is the setup for our replay section of the Q-algorithm. We want to select random sample of batches to train our algorithm with. Our default batch size is 32, but at the begining there wouldn't be enough to sample 32 batches. Therefore, we train the algorithm with the whole memory array.
+**Line 25-Line 30** This simply put is the setup for our replay section of the Q-algorithm. We want to select random sample of batches to train our algorithm with. Our default batch size is 32, but at the begining there wouldn't be enough to sample 32 batches. Therefore, we train the algorithm with the whole memory array.
 
-**Line 33-Line 35** Iterating over our memory, we begin by setting our target reward to our reward in the first sample memory. 
+**Line 34-Line 36** Iterating over our memory, we begin by setting our target reward to our reward in the first sample memory. 
 
-**Line 37-Line 49** In that memory if our game wasn't over than that means our algorithm performed well. So we want to persuade our algorithm to do the same thing in the future. Therefore we set our future reward (target reward) to the current reward from the current action combined with the expected reward from the best future action taken at the following state. We multiply by our learningRate to avoid converging problems. We are essentially increasing the probability of our desired action.
+**Line 38-Line 50** In that memory if our game wasn't over than that means our algorithm performed well. So we want to persuade our algorithm to do the same thing in the future. Therefore we set our future reward (target reward) to the current reward from the current action combined with the expected reward from the best future action taken at the following state. We multiply by our learningRate to avoid converging problems. We are essentially increasing the probability of our desired action.
 
-**Line 57** Here we ask the algorithm again what it might predict for the previous state.
+**Line 58** Here we ask the algorithm again what it might predict for the previous state.
 
-**Line 59** We manipulate the prediction, we take the prediction and insert our own probability of our corresponding action. Simply telling the algorithm that for a situation like this we want this action to be performed.
+**Line 60** We manipulate the prediction, we take the prediction and insert our own probability of our corresponding action. Simply telling the algorithm that for a situation like this we want this action to be performed.
 
-**Line 62** We feed the manipulations and the results into our model to train it for a single epoch.
+**Line 63** We feed the manipulations and the results into our model to train it for a single epoch.
 
-**Line 65-Line 66** Finally, after everything is done, we decrease our exploration rate by multiplying our epsilon with our epsilon decay rate.
+**Line 66-Line 67** Finally, after everything is done, we decrease our exploration rate by multiplying our epsilon with our epsilon decay rate.
 
 ## Conclusion
 
