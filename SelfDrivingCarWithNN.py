@@ -11,7 +11,11 @@ from keras.layers.convolutional import Conv2D
 import pyautogui as p
 import random
 import time
+GPU = 1 #Change it to 0 in order to use CPU
 
+if GPU == 0:
+    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+    
 #Function calculates the lanes
 def CalculateLanes(OrgImage):
     errors = False
